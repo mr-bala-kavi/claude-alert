@@ -22,12 +22,20 @@ claude plugin install sound-alert@claude-alert
 
 Restart Claude Code after installing.
 
-## Custom sounds
+The sound **keeps repeating until you respond** — answering the question, approving the permission, or sending a message stops it. If nobody responds it stops on its own after 30 seconds.
 
-Set an environment variable to the path of any sound file your platform supports:
+## Settings
 
-- `CLAUDE_ALERT_QUESTION_WAV` — sound for questions
-- `CLAUDE_ALERT_NOTIFY_WAV` — sound for permission/idle notifications
+Set these environment variables to change the behaviour:
+
+| Variable | Default | What it does |
+|---|---|---|
+| `CLAUDE_ALERT_MAX_SECONDS` | `30` | How long to keep ringing. `0` = play once only |
+| `CLAUDE_ALERT_GAP_SECONDS` | `1` | Pause between repeats |
+| `CLAUDE_ALERT_QUESTION_WAV` | system sound | Sound file for questions |
+| `CLAUDE_ALERT_NOTIFY_WAV` | system sound | Sound file for permission/idle notifications |
+
+You can also set them in `~/.claude/settings.json` under `"env"`.
 
 ## Test
 

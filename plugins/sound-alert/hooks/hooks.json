@@ -7,7 +7,7 @@
           {
             "type": "command",
             "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/alert.sh\" question",
-            "timeout": 10,
+            "timeout": 600,
             "async": true
           }
         ]
@@ -20,6 +20,43 @@
           {
             "type": "command",
             "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/alert.sh\" notify",
+            "timeout": 600,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/alert.sh\" stop",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/alert.sh\" stop",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/alert.sh\" stop",
             "timeout": 10,
             "async": true
           }
