@@ -33,11 +33,18 @@ play() {
       afplay "${custom:-$def}" >/dev/null 2>&1 || osascript -e 'beep' >/dev/null 2>&1
       ;;
     Linux)
+      # WSL: Linux audio is often missing, so use the Windows player.
+      if [ -z "$custom" ] && grep -qi microsoft /proc/version 2>/dev/null && command -v powershell.exe >/dev/null 2>&1; then
+        powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(wslpath -w "$dir/alert.ps1")" "$kind" >/dev/null 2>&1
+        return
+      fi
       if [ "$kind" = "question" ]; then def="/usr/share/sounds/freedesktop/stereo/message-new-instant.oga"; else def="/usr/share/sounds/freedesktop/stereo/bell.oga"; fi
       snd="${custom:-$def}"
-      { command -v paplay >/dev/null 2>&1 && paplay "$snd" >/dev/null 2>&1; } ||
-      { command -v aplay  >/dev/null 2>&1 && aplay -q "$snd" >/dev/null 2>&1; } ||
-      printf '\a' > /dev/tty 2>/dev/null
+      { command -v pw-play >/dev/null 2>&1 && pw-play "$snd" >/dev/null 2>&1; } ||
+      { command -v paplay  >/dev/null 2>&1 && paplay "$snd" >/dev/null 2>&1; } ||
+      { command -v canberra-gtk-play >/dev/null 2>&1 && canberra-gtk-play -f "$snd" >/dev/null 2>&1; } ||
+      { command -v aplay   >/dev/null 2>&1 && aplay -q "$snd" >/dev/null 2>&1; } ||
+      { printf '\a' > /dev/tty; sleep 1; } 2>/dev/null
       ;;
     MINGW*|MSYS*|CYGWIN*)
       ps1="$dir/alert.ps1"

@@ -53,4 +53,5 @@ claude plugin disable sound-alert@claude-alert
 
 - Windows: Git for Windows (Claude Code runs hooks through its `sh`)
 - macOS: nothing extra (`afplay` is built in)
-- Linux: `paplay` (PulseAudio/PipeWire) or `aplay` (ALSA)
+- Linux: `pw-play` (PipeWire), `paplay` (PulseAudio), `canberra-gtk-play` or `aplay` (ALSA), plus the freedesktop sound theme (`sound-theme-freedesktop`) for the default sounds
+- WSL: nothing extra — sounds play through Windows
