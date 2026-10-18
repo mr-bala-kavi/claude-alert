@@ -2,6 +2,10 @@
 
 A Claude Code plugin that plays a sound when Claude needs you — so you don't miss it while working in another tab.
 
+<p align="center"><img src="docs/demo.svg" alt="Illustration: Claude asks a question in the terminal and a bell rings" width="760"></p>
+
+<sub>Illustration of the flow — the real plugin plays an actual system sound.</sub>
+
 ## When it plays
 
 | Event | Windows | macOS | Linux |
