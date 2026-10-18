@@ -1,0 +1,6 @@
+{
+  "name": "sound-alert",
+  "version": "1.1.0",
+  "description": "Plays a sound when Claude asks a question, needs permission, or is waiting for you.",
+  "author": { "name": "Sakeel" }
+}

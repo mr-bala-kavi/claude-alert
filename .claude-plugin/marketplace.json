@@ -1,0 +1,12 @@
+{
+  "name": "claude-alert",
+  "description": "Sound alerts for Claude Code (Windows, macOS, Linux).",
+  "owner": { "name": "Sakeel" },
+  "plugins": [
+    {
+      "name": "sound-alert",
+      "source": "./plugins/sound-alert",
+      "description": "Plays a sound when Claude asks a question, needs permission, or is waiting for you."
+    }
+  ]
+}
