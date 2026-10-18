@@ -50,7 +50,15 @@ play() {
   esac
 }
 
-# Claim the marker; a newer alert overwrites it and this loop exits.
+# Already ringing for this session (e.g. AskUserQuestion also fires a
+# permission_prompt notification) - keep the current alert going.
+# A marker older than the max ring time is stale (its loop was killed).
+if [ -s "$marker" ]; then
+  since="$(cut -d- -f2 "$marker" 2>/dev/null)"
+  [ $(( $(date +%s) - ${since:-0} )) -lt $(( max + 15 )) ] && exit 0
+fi
+
+# Claim the marker; "stop" removes it and this loop exits.
 token="$$-$(date +%s)"
 printf '%s' "$token" > "$marker"
 start="$(date +%s)"
