@@ -21,5 +21,5 @@ Values are limited to 1-50. If `CLAUDE_ALERT_MAX_SECONDS` is set, it can stop th
 
 **A number:**
 1. Check that it's a whole number from 1 to 50. If it isn't, say so and stop. For 0 or "off", explain that the minimum is 1, and that `claude plugin disable sound-alert@claude-alert` turns the alerts off.
-2. Write `repeat=<N>` to `~/.claude/sound-alert/config`. Create the folder if it's missing. Replace an existing `repeat=` line and keep any other lines.
+2. Write `repeat=<N>` to `~/.claude/sound-alert/config` as plain UTF-8 without a BOM. Use the shell (`printf`) or the Write tool, not PowerShell `Out-File`/`Set-Content`. Create the folder if it's missing. Replace an existing `repeat=` line and keep any other lines.
 3. Confirm it in one line, for example "Alert will play 3 times (stops as soon as you respond)". The change applies at the next alert. A restart isn't needed.

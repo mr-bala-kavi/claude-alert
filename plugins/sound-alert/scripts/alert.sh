@@ -19,7 +19,7 @@ max="$CLAUDE_ALERT_MAX_SECONDS"
 gap="${CLAUDE_ALERT_GAP_SECONDS:-1}"
 
 repeat="$CLAUDE_ALERT_REPEAT"
-[ -z "$repeat" ] && repeat="$(sed -n 's/^repeat=\([0-9]*\).*/\1/p' "$userdir/config" 2>/dev/null | tail -1)"
+[ -z "$repeat" ] && repeat="$(sed -n 's/^[^a-z]*repeat[[:space:]]*=[[:space:]]*\([0-9]*\).*/\1/p' "$userdir/config" 2>/dev/null | tail -1)"
 case "$repeat" in ''|*[!0-9]*) repeat=5 ;; esac
 [ "$repeat" -lt 1 ] && repeat=1
 [ "$repeat" -gt 50 ] && repeat=50
