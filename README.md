@@ -44,6 +44,10 @@ Any audio format works — Claude converts it to WAV with `ffmpeg` (or `afconver
 
 ## Choose how many times it plays
 
+<p align="center"><img src="docs/set-repeat.gif" alt="Illustration: /sound-alert:set-repeat 3 saves the setting, and the next alert plays three times" width="820"></p>
+
+<sub>Illustration of the command — sounds can't be shown in a GIF.</sub>
+
 ```
 /sound-alert:set-repeat 3      # play 3 times (1-50)
 /sound-alert:set-repeat show   # current setting
