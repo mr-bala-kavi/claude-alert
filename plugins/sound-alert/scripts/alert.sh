@@ -2,18 +2,28 @@
 # Cross-platform alert sound for Claude Code hook events.
 # Usage: alert.sh <question|notify|stop>
 #
-# question/notify keep ringing until the user responds (a "stop" call from the
-# PostToolUse / UserPromptSubmit / Stop hooks) or CLAUDE_ALERT_MAX_SECONDS passes.
+# question/notify play the sound up to N times, stopping early when the user
+# responds (a "stop" call from the PostToolUse / UserPromptSubmit / Stop hooks).
 #
-# Env vars:
+# Settings (env vars win over ~/.claude/sound-alert/config, which
+# /sound-alert:set-repeat writes as "repeat=N"):
+#   CLAUDE_ALERT_REPEAT       how many times to play (default 5, 1-50)
+#   CLAUDE_ALERT_MAX_SECONDS  optional time limit; 0 = play once (older setting)
+#   CLAUDE_ALERT_GAP_SECONDS  pause between repeats (default 1)
 #   CLAUDE_ALERT_QUESTION_WAV / CLAUDE_ALERT_NOTIFY_WAV  custom sound files
 #                             (default: ~/.claude/sound-alert/, then the plugin's sounds/alert.wav)
-#   CLAUDE_ALERT_MAX_SECONDS  max ringing time (default 30, 0 = play once)
-#   CLAUDE_ALERT_GAP_SECONDS  pause between repeats (default 1)
 kind="${1:-notify}"
 dir="$(cd "$(dirname "$0")" && pwd)"
-max="${CLAUDE_ALERT_MAX_SECONDS:-30}"
+userdir="$HOME/.claude/sound-alert"
+max="$CLAUDE_ALERT_MAX_SECONDS"
 gap="${CLAUDE_ALERT_GAP_SECONDS:-1}"
+
+repeat="$CLAUDE_ALERT_REPEAT"
+[ -z "$repeat" ] && repeat="$(sed -n 's/^repeat=\([0-9]*\).*/\1/p' "$userdir/config" 2>/dev/null | tail -1)"
+case "$repeat" in ''|*[!0-9]*) repeat=5 ;; esac
+[ "$repeat" -lt 1 ] && repeat=1
+[ "$repeat" -gt 50 ] && repeat=50
+[ "$max" = "0" ] && repeat=1
 
 # One marker file per session, so parallel sessions don't silence each other.
 input="$(cat 2>/dev/null | tr -d '\r\n')"
@@ -29,7 +39,6 @@ if [ "$kind" = "question" ]; then custom="$CLAUDE_ALERT_QUESTION_WAV"; else cust
 # Sound priority: env var > user's sound from /sound-alert:set-sound
 # (~/.claude/sound-alert/<kind>.wav, then alert.wav) > the plugin's bundled
 # sound > system sound. The user folder survives plugin updates.
-userdir="$HOME/.claude/sound-alert"
 for f in "$userdir/$kind.wav" "$userdir/alert.wav" "$dir/../sounds/alert.wav"; do
   [ -n "$custom" ] && break
   [ -f "$f" ] && custom="$f"
@@ -66,26 +75,31 @@ play() {
   esac
 }
 
-# Already ringing for this session (e.g. AskUserQuestion also fires a
-# permission_prompt notification) - keep the current alert going.
-# A marker older than the max ring time is stale (its loop was killed).
+# The marker holds "<pid> <last heartbeat>". If another alert is already
+# ringing for this session (e.g. AskUserQuestion also fires a permission_prompt
+# notification), keep it going. No heartbeat for 60s means its loop was killed.
 if [ -s "$marker" ]; then
-  since="$(cut -d- -f2 "$marker" 2>/dev/null)"
-  [ $(( $(date +%s) - ${since:-0} )) -lt $(( max + 15 )) ] && exit 0
+  beat="$(cut -d' ' -f2 "$marker" 2>/dev/null)"
+  case "$beat" in ''|*[!0-9]*) beat=0 ;; esac
+  [ $(( $(date +%s) - beat )) -lt 60 ] && exit 0
 fi
 
 # Claim the marker; "stop" removes it and this loop exits.
-token="$$-$(date +%s)"
-printf '%s' "$token" > "$marker"
+printf '%s %s' "$$" "$(date +%s)" > "$marker"
 start="$(date +%s)"
+played=0
 
 while :; do
   play
-  [ "$max" -gt 0 ] 2>/dev/null || break
+  played=$((played + 1))
+  [ "$played" -lt "$repeat" ] || break
   sleep "$gap"
-  [ "$(cat "$marker" 2>/dev/null)" = "$token" ] || exit 0
-  [ $(( $(date +%s) - start )) -lt "$max" ] || break
+  [ "$(cut -d' ' -f1 "$marker" 2>/dev/null)" = "$$" ] || exit 0
+  if [ -n "$max" ] && [ "$max" -gt 0 ] 2>/dev/null; then
+    [ $(( $(date +%s) - start )) -lt "$max" ] || break
+  fi
+  printf '%s %s' "$$" "$(date +%s)" > "$marker"
 done
 
-[ "$(cat "$marker" 2>/dev/null)" = "$token" ] && rm -f "$marker"
+[ "$(cut -d' ' -f1 "$marker" 2>/dev/null)" = "$$" ] && rm -f "$marker"
 exit 0
