@@ -26,6 +26,10 @@ The sound **keeps repeating until you respond** — answering the question, appr
 
 ## Use your own sound
 
+<p align="center"><img src="docs/set-sound.gif" alt="Illustration: running /sound-alert:set-sound converts an MP3 to WAV and test-plays it" width="820"></p>
+
+<sub>Illustration of the command — sounds can't be shown in a GIF.</sub>
+
 Run this inside Claude Code:
 
 ```
