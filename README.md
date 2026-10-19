@@ -8,10 +8,10 @@ A Claude Code plugin that plays a sound when Claude needs you — so you don't m
 
 ## When it plays
 
-| Event | Windows | macOS | Linux |
-|---|---|---|---|
-| Claude asks a question (AskUserQuestion) | Windows Notify | Glass | message-new-instant |
-| Permission prompt / waiting for input | Windows Exclamation | Ping | bell |
+- Claude asks a question (AskUserQuestion)
+- Claude needs permission, or is waiting for your input
+
+The plugin ships its own sound (`plugins/sound-alert/sounds/alert.wav`), so everyone who installs it hears the same alert on Windows, macOS and Linux.
 
 ## Install
 
@@ -32,10 +32,12 @@ Set these environment variables to change the behaviour:
 |---|---|---|
 | `CLAUDE_ALERT_MAX_SECONDS` | `30` | How long to keep ringing. `0` = play once only |
 | `CLAUDE_ALERT_GAP_SECONDS` | `1` | Pause between repeats |
-| `CLAUDE_ALERT_QUESTION_WAV` | system sound | Sound file for questions |
-| `CLAUDE_ALERT_NOTIFY_WAV` | system sound | Sound file for permission/idle notifications |
+| `CLAUDE_ALERT_QUESTION_WAV` | bundled `alert.wav` | Sound file for questions |
+| `CLAUDE_ALERT_NOTIFY_WAV` | bundled `alert.wav` | Sound file for permission/idle notifications |
 
 You can also set them in `~/.claude/settings.json` under `"env"`.
+
+To change the sound for everyone, replace `sounds/alert.wav` with another **16-bit PCM WAV** file (Windows can't play MP3), bump the version in `plugin.json` and push.
 
 ## Test
 

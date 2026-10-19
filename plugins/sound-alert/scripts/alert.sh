@@ -7,6 +7,7 @@
 #
 # Env vars:
 #   CLAUDE_ALERT_QUESTION_WAV / CLAUDE_ALERT_NOTIFY_WAV  custom sound files
+#                             (default: the plugin's sounds/alert.wav)
 #   CLAUDE_ALERT_MAX_SECONDS  max ringing time (default 30, 0 = play once)
 #   CLAUDE_ALERT_GAP_SECONDS  pause between repeats (default 1)
 kind="${1:-notify}"
@@ -25,6 +26,9 @@ if [ "$kind" = "stop" ]; then
 fi
 
 if [ "$kind" = "question" ]; then custom="$CLAUDE_ALERT_QUESTION_WAV"; else custom="$CLAUDE_ALERT_NOTIFY_WAV"; fi
+# The plugin's bundled sound is the default everywhere; system sounds are the fallback.
+bundled="$dir/../sounds/alert.wav"
+[ -z "$custom" ] && [ -f "$bundled" ] && custom="$bundled"
 
 play() {
   case "$(uname -s)" in
@@ -34,8 +38,8 @@ play() {
       ;;
     Linux)
       # WSL: Linux audio is often missing, so use the Windows player.
-      if [ -z "$custom" ] && grep -qi microsoft /proc/version 2>/dev/null && command -v powershell.exe >/dev/null 2>&1; then
-        powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(wslpath -w "$dir/alert.ps1")" "$kind" >/dev/null 2>&1
+      if grep -qi microsoft /proc/version 2>/dev/null && command -v powershell.exe >/dev/null 2>&1; then
+        powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(wslpath -w "$dir/alert.ps1")" "$kind" ${custom:+"$(wslpath -w "$custom")"} >/dev/null 2>&1
         return
       fi
       if [ "$kind" = "question" ]; then def="/usr/share/sounds/freedesktop/stereo/message-new-instant.oga"; else def="/usr/share/sounds/freedesktop/stereo/bell.oga"; fi
@@ -47,9 +51,9 @@ play() {
       { printf '\a' > /dev/tty; sleep 1; } 2>/dev/null
       ;;
     MINGW*|MSYS*|CYGWIN*)
-      ps1="$dir/alert.ps1"
-      command -v cygpath >/dev/null 2>&1 && ps1="$(cygpath -w "$ps1")"
-      powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$ps1" "$kind" >/dev/null 2>&1
+      ps1="$dir/alert.ps1"; snd="$custom"
+      command -v cygpath >/dev/null 2>&1 && { ps1="$(cygpath -w "$ps1")"; [ -n "$snd" ] && snd="$(cygpath -w "$snd")"; }
+      powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$ps1" "$kind" ${snd:+"$snd"} >/dev/null 2>&1
       ;;
     *)
       printf '\a' > /dev/tty 2>/dev/null
