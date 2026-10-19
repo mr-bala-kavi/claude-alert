@@ -20,7 +20,9 @@ export PATH="$work/bin:$PATH"
 export CLAUDE_ALERT_GAP_SECONDS=0
 unset CLAUDE_ALERT_REPEAT CLAUDE_ALERT_MAX_SECONDS CLAUDE_ALERT_QUESTION_WAV CLAUDE_ALERT_NOTIFY_WAV 2>/dev/null
 
-run() { : > "$log"; echo "{\"session_id\":\"$1\"}" | sh "$script" "$2"; }
+# run <session> <kind> [VAR=value ...] - env vars apply to this run only
+# (in macOS /bin/sh, "VAR=x func" leaks VAR into the rest of the script).
+run() { sid=$1 kind=$2; shift 2; : > "$log"; echo "{\"session_id\":\"$sid\"}" | env "$@" sh "$script" "$kind"; }
 plays() { wc -l < "$log" | tr -d ' '; }
 check() { # name expected actual
   if [ "$2" = "$3" ]; then echo "PASS  $1"; else echo "FAIL  $1 (expected '$2', got '$3')"; fails=$((fails + 1)); fi
@@ -32,20 +34,20 @@ sh -n "$script"; check "script syntax" 0 $?
 run s1 question; check "default plays 5 times" 5 "$(plays)"
 check "uses bundled alert.wav" 1 "$(grep -cE 'sounds[/\]alert.wav' "$log" | awk '{print ($1>0)}')"
 
-CLAUDE_ALERT_REPEAT=2 run s2 notify; check "CLAUDE_ALERT_REPEAT=2" 2 "$(plays)"
-CLAUDE_ALERT_MAX_SECONDS=0 run s3 notify; check "MAX_SECONDS=0 plays once" 1 "$(plays)"
+run s2 notify CLAUDE_ALERT_REPEAT=2; check "CLAUDE_ALERT_REPEAT=2" 2 "$(plays)"
+run s3 notify CLAUDE_ALERT_MAX_SECONDS=0; check "MAX_SECONDS=0 plays once" 1 "$(plays)"
 
 mkdir -p "$HOME/.claude/sound-alert"
 printf 'repeat=3\n' > "$HOME/.claude/sound-alert/config"; run s4 question; check "config repeat=3" 3 "$(plays)"
 printf '\357\273\277repeat=2\r\n' > "$HOME/.claude/sound-alert/config"; run s5 question; check "config with BOM+CRLF" 2 "$(plays)"
-printf 'repeat=99\n' > "$HOME/.claude/sound-alert/config"; CLAUDE_ALERT_MAX_SECONDS=2 run s6 question
+printf 'repeat=99\n' > "$HOME/.claude/sound-alert/config"; run s6 question CLAUDE_ALERT_MAX_SECONDS=2
 check "repeat capped and time limit stops it" 1 "$( [ "$(plays)" -lt 50 ] && echo 1 || echo 0)"
 rm -f "$HOME/.claude/sound-alert/config"
 
 printf 'x' > "$HOME/.claude/sound-alert/question.wav"
-CLAUDE_ALERT_REPEAT=1 run s7 question; check "user question.wav is used" 1 "$(grep -cE 'sound-alert[/\]question.wav' "$log")"
-CLAUDE_ALERT_REPEAT=1 run s8 notify; check "notify falls back to bundled" 1 "$(grep -cE 'sounds[/\]alert.wav' "$log")"
-CLAUDE_ALERT_REPEAT=1 CLAUDE_ALERT_QUESTION_WAV=/env/override.wav run s9 question; check "env var overrides user file" 1 "$(grep -c 'override.wav' "$log")"
+run s7 question CLAUDE_ALERT_REPEAT=1; check "user question.wav is used" 1 "$(grep -cE 'sound-alert[/\]question.wav' "$log")"
+run s8 notify CLAUDE_ALERT_REPEAT=1; check "notify falls back to bundled" 1 "$(grep -cE 'sounds[/\]alert.wav' "$log")"
+run s9 question CLAUDE_ALERT_REPEAT=1 CLAUDE_ALERT_QUESTION_WAV=/env/override.wav; check "env var overrides user file" 1 "$(grep -c 'override.wav' "$log")"
 rm -rf "$HOME/.claude/sound-alert"
 
 # Stop: 20 repeats, stop after ~1s.
