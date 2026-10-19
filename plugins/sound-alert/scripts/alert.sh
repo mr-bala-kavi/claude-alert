@@ -7,7 +7,7 @@
 #
 # Env vars:
 #   CLAUDE_ALERT_QUESTION_WAV / CLAUDE_ALERT_NOTIFY_WAV  custom sound files
-#                             (default: the plugin's sounds/alert.wav)
+#                             (default: ~/.claude/sound-alert/, then the plugin's sounds/alert.wav)
 #   CLAUDE_ALERT_MAX_SECONDS  max ringing time (default 30, 0 = play once)
 #   CLAUDE_ALERT_GAP_SECONDS  pause between repeats (default 1)
 kind="${1:-notify}"
@@ -26,9 +26,14 @@ if [ "$kind" = "stop" ]; then
 fi
 
 if [ "$kind" = "question" ]; then custom="$CLAUDE_ALERT_QUESTION_WAV"; else custom="$CLAUDE_ALERT_NOTIFY_WAV"; fi
-# The plugin's bundled sound is the default everywhere; system sounds are the fallback.
-bundled="$dir/../sounds/alert.wav"
-[ -z "$custom" ] && [ -f "$bundled" ] && custom="$bundled"
+# Sound priority: env var > user's sound from /sound-alert:set-sound
+# (~/.claude/sound-alert/<kind>.wav, then alert.wav) > the plugin's bundled
+# sound > system sound. The user folder survives plugin updates.
+userdir="$HOME/.claude/sound-alert"
+for f in "$userdir/$kind.wav" "$userdir/alert.wav" "$dir/../sounds/alert.wav"; do
+  [ -n "$custom" ] && break
+  [ -f "$f" ] && custom="$f"
+done
 
 play() {
   case "$(uname -s)" in

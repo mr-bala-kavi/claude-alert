@@ -24,6 +24,20 @@ Restart Claude Code after installing.
 
 The sound **keeps repeating until you respond** — answering the question, approving the permission, or sending a message stops it. If nobody responds it stops on its own after 30 seconds.
 
+## Use your own sound
+
+Run this inside Claude Code:
+
+```
+/sound-alert:set-sound ~/Downloads/my-sound.mp3            # for every alert
+/sound-alert:set-sound ~/Downloads/question.mp3 question   # only questions
+/sound-alert:set-sound ~/Downloads/permission.mp3 notify   # only permission/idle prompts
+/sound-alert:set-sound show                                 # which sound is active
+/sound-alert:set-sound reset                                # back to the default
+```
+
+Any audio format works — Claude converts it to WAV with `ffmpeg` (or `afconvert` on macOS) and saves it in `~/.claude/sound-alert/`, so your sound stays when the plugin updates. Short clips (1–3 s) work best because the sound repeats until you respond.
+
 ## Settings
 
 Set these environment variables to change the behaviour:
